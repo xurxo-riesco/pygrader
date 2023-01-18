@@ -1,12 +1,12 @@
 """submissions.py: Utils that help dealing with submissions"""
 
 import os
-from typing import Callable
+from collections.abc import Callable
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from pytz import timezone
 import git
-import common.printing as printing
+from common import printing
 
 def check_late(deadline_path, iso_timestamp):
     """Checks if iso_timestamp is past the deadline
@@ -81,7 +81,7 @@ def checkout_to_team_branch(
 
     return True
 
-def tag(tag_name: str) -> Callable:  # pylint: disable=unused-argument
+def tag() -> Callable:
     """Decorator function that checks out to tag_name before the test.
 
     If tag_name is 'master', we checkout to the submission's master branch,
@@ -144,7 +144,7 @@ def to_branch(hw_instance, branch_name: str):
 
     hw_instance.repo.git.clean("-f", "-d")
 
-def branch(branch_name: str) -> Callable:  # pylint: disable=unused-argument
+def branch(branch_name: str) -> Callable:
     """Decorator function that checks out submitter-branch_name before the test.
 
     This is assumed to be in reference to a submission branch, which follows the

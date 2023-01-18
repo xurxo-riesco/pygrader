@@ -2,18 +2,19 @@
 
 """grade.py: Grading driver"""
 
+from __future__ import annotations
+
 import os
 import sys
 import signal
 import argparse
 import importlib
-from typing import Dict, Optional, Tuple, List
 
 from common.grades import Grades
 from common.hw_base import RubricItem
 
-import common.printing as p
-import common.utils as utils
+from common import printing as p
+from common import utils
 
 _, subdirs, _ = next(os.walk(os.path.dirname(os.path.realpath(__file__))))
 assignments = []
@@ -116,7 +117,7 @@ class Grader():
         grades: Maps (uni/team) -> (rubric item -> (pts, comments))
     """
     def __init__(self, hw_name: str, submitter: str, rubric_code: str,
-                 env: Dict[str, bool]):
+                 env: dict[str, bool]):
         self.hw_name = hw_name
         self.rubric_code = rubric_code
         self.submitter = submitter
@@ -130,7 +131,6 @@ class Grader():
                                         "grades.json")
         self.grades = Grades(self.grades_file, self.hw_class.rubric,
                              self.submitter)
-
     def _get_hw_class(self):
         for assignment in assignments:
             if self.hw_name.lower() in assignment.ALIASES:
@@ -141,9 +141,9 @@ class Grader():
         p.print_intro(self.submitter, self.hw_name, rubric_code)
 
     def print_headerline(self, rubric_item: RubricItem):
-        header = 'Grading {}'.format(rubric_item.code)
+        header = f"Grading {rubric_item.code}"
         if rubric_item.deduct_from:
-            header += ' ({}p, deductive)'.format(rubric_item.deduct_from)
+            header += " ({rubric_item.deduct_from}p, deductive)"
         p.print_green(header)
 
     def print_header(self, rubric_item: RubricItem):
@@ -154,9 +154,8 @@ class Grader():
 
     def print_subitems(self, rubric_item: RubricItem):
         for i, (pts, desc) in enumerate(rubric_item.subitems, 1):
-            p.print_magenta("{}.{} ({}p): {}".format(rubric_item.code,
-                                                     i, pts, desc))
-
+            p.print_magenta(f"{rubric_item.code}.{i} ({pts}p): {desc}")
+    
     def print_subitem_grade(self, code: str, warn: bool = False):
         if self.grades.is_graded(code):
             # We've graded this already. Let's show the current grade.
@@ -168,7 +167,7 @@ class Grader():
             p.print_yellow(f"[ {code} hasn't been graded yet ]")
 
     def prompt_grade(self, rubric_item: RubricItem,
-                     autogrades: Optional[List[Tuple[str, str]]] = None):
+                     autogrades: [list[tuple[str, str]]] | None = None):
         """Prompts the TA for pts/comments"""
 
         if autogrades:
@@ -189,7 +188,7 @@ class Grader():
                     try:
                         award = input(f"{p.CBLUE2}Apply? [y/n]: {p.CEND}")
                         award = award.strip().lower()
-                        if award in ('y', 'n'):
+                        if award in {'y', 'n'}:
                             break
                     except EOFError:
                         print("^D")
@@ -274,7 +273,7 @@ class Grader():
 
             try:
                 utils.run_and_prompt(test_wrapper)
-            except Exception as e:  # pylint: disable=W0703
+            except Exception as e:
                 p.print_red(f"\n\n[ Exception: {e} ]")
         else:
             self.print_headerline(rubric_item)

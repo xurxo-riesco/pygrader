@@ -24,7 +24,7 @@ def create_dir(name):
 
 def record_deadline():
     """Reads in a deadline and stores it"""
-    global DEADLINE  # pylint: disable=W0603
+    global DEADLINE  # pylint: disable=global-statement
     if os.path.exists("deadline.txt"):
         return
     if not DEADLINE:
@@ -40,7 +40,7 @@ def record_deadline():
                 print("Incorrect format!")
 
     # Write the deadline to ~.grade/hwN/deadline.txt
-    with open("deadline.txt", "w") as d:
+    with open("deadline.txt", "w", encoding="ascii") as d:
         d.write(DEADLINE)
 
 def _prompt_overwrite(hw_name: str, hw_path: str) -> bool:
@@ -51,7 +51,7 @@ def _prompt_overwrite(hw_name: str, hw_path: str) -> bool:
             print("^D")
         if res == "n":
             return False
-        elif res == "y":
+        if res == "y":
             break
 
     shutil.rmtree(hw_path)
@@ -72,7 +72,7 @@ def main():
 
     ta_file = os.path.join(Path.home(), 'tas.txt')
     if os.path.exists(ta_file):
-        with open(os.path.join(Path.home(), 'tas.txt'), "r") as f:
+        with open(os.path.join(Path.home(), 'tas.txt'), "r", encoding="ascii") as f:
             tas = f.read().splitlines()
 
     tas.append(getpass.getuser())

@@ -3,8 +3,6 @@ import os
 import subprocess
 import shutil
 
-from typing import Callable, Dict, Optional, List
-
 import common.printing as p
 
 KEDR_START = "sudo kedr start {}"
@@ -23,7 +21,7 @@ SED_TO_END = "sed -n '/{0}/,$p' {1}"
 
 def cmd_popen(cmd: str) -> 'Process':
     """Uses subprocess.Popen to run a command, returns the object."""
-    prc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, # pylint: disable=R1732
+    prc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                      executable="/bin/bash",
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE, close_fds=True,
@@ -34,7 +32,7 @@ def run_cmd(cmd: str, silent: bool = False,
             shell: bool = True, **kwargs) -> int:
     """Runs cmd and returns the status code."""
     return subprocess.run(cmd, shell=shell,
-                          capture_output=silent, **kwargs).returncode
+                          capture_output=silent, **kwargs, check=True).returncode
 
 def is_dir(path: str):
     """Checks if path is a directory"""
@@ -49,7 +47,7 @@ def dir_exists(dir_path: str) -> bool:
     """Checks if dir_path exists (and is a directory)."""
     return os.path.isdir(dir_path)
 
-def prompt_file_name(file_list: Optional[List[str]] = None) -> str:
+def prompt_file_name(file_list: list[str] | None = None) -> str:
     """Prompts the user for a file to open"""
     ls_output = os.listdir() if not file_list else file_list
 
@@ -81,7 +79,7 @@ def get_file(fname: str) -> str:
     p.print_red('‾'*85)
     return submission_name
 
-def concat_files(outfile: str, file_types: List[str]) -> str:
+def concat_files(outfile: str, file_types: list[str]) -> str:
     """Concats all relevant files in the cwd into 1 file called `outfile`."""
     if file_exists(outfile):
         return outfile
@@ -99,7 +97,7 @@ def remove_file(fname: str):
     else:
         p.print_red(f"[ OPPS - {fname} does not exist ]")
 
-def extract_between(fname: str, start: str, end: Optional[str] = None,
+def extract_between(fname: str, start: str, end: str | None = None,
                     capture: bool = False):
     """Prints the text in fname that's in between start and end"""
     if not end:
@@ -107,7 +105,7 @@ def extract_between(fname: str, start: str, end: Optional[str] = None,
     else:
         sed_command = SED_BETWEEN.format(start, end, fname)
     return subprocess.run(sed_command, shell=True, capture_output=capture,
-                          universal_newlines=True)
+                          universal_newlines=True, check=True)
 
 def extract_function(file_name: str, funct_name: str) -> str:
     if not file_exists(file_name):
@@ -151,7 +149,7 @@ def grep_file(fname: str, pattern: str, padding: int = 0) -> int:
     fname = get_file(fname)
     padding_opt = "" if not padding else f"-C {padding}"
     cmd = f"grep --color=always -n {padding_opt} -E '{pattern}' {fname} "
-    return subprocess.run(cmd, shell=True).returncode
+    return subprocess.run(cmd, shell=True, check=True).returncode
 
 def grep_string(words: str, pattern: str, padding: int = 0) -> int:
     """Greps fname for pattern and returns the status code
@@ -159,10 +157,10 @@ def grep_string(words: str, pattern: str, padding: int = 0) -> int:
     NOTE: Grep output is dumped to the shell."""
     padding_opt = "" if not padding else f"-C {padding}"
     cmd = f"echo '{words}' | grep --color=always {padding_opt} -E '^|{pattern}'"
-    return subprocess.run(cmd, shell=True).returncode
+    return subprocess.run(cmd, shell=True, check=True).returncode
 
-def inspect_string(s: str, pattern: Optional[str] = None,
-                   use_pager: bool = True, lang: Optional[str] = None):
+def inspect_string(s: str, pattern: str | None = None,
+                   use_pager: bool = True, lang: str | None = None):
     if not lang:
         lang = "txt"
 
@@ -177,7 +175,7 @@ def inspect_string(s: str, pattern: Optional[str] = None,
     bat = cmd_popen(cmd)
     print(bat.communicate(input=s)[0])
 
-def inspect_file(fname: str, pattern: Optional[str] = None,
+def inspect_file(fname: str, pattern: str | None = None,
                  use_pager: bool = True):
     """Displays 'fname', w/ optional pattern highlighted, optionally in less"""
     name = get_file(fname)
@@ -188,14 +186,14 @@ def inspect_file(fname: str, pattern: Optional[str] = None,
         cmd = f"{bat_str} | {grep_str}"
     else:
         cmd = f"bat {name} {'--paging=never' if not use_pager else ''}"
-    subprocess.run(cmd, shell=True)
+    subprocess.run(cmd, shell=True, check=True)
 
-def inspect_directory(files: List[str], pattern: Optional[str] = None,
-                      banner_fn: Optional[Callable] = None):
+def inspect_directory(files: list[str], pattern: str | None = None,
+                      banner_fn: callable | None = None):
     """Prompt the user for which file to inspect with optional pattern.
 
     Args:
-        files: List of files in the current directory
+        files: list of files in the current directory
             (as reported by os.listdir(os.getcwd())).
         pattern: Optional pattern to highlight in the files.
         banner_fn: Optional function to call before presenting choices
@@ -228,7 +226,7 @@ def compile_code(makefile_target: str = ""):
         os.system("bash")
 
     p.print_cyan("[ Compiling... ]")
-    ret = subprocess.call(MAKE.format(makefile_target), shell=True)
+    ret = subprocess.call(MAKE.format(makefile_target), shell=True, check=True)
 
     if ret != 0:
         p.print_red("[ OOPS ]")
@@ -239,7 +237,7 @@ def compile_code(makefile_target: str = ""):
 
 def insert_mod(mod: str, kedr: bool = True):
     """Calls insmod with mod and optionally attaches KEDR"""
-    if subprocess.call(DMESG_C.split()) != 0:
+    if subprocess.call(DMESG_C.split(), check=True) != 0:
         pass
 
     if kedr:
@@ -257,10 +255,10 @@ def insert_mod(mod: str, kedr: bool = True):
 
 def remove_mod_silent(mod: str, kedr: bool = True):
     subprocess.run(RMMOD.format(mod).split(), stdout=subprocess.DEVNULL,
-                   stderr=subprocess.STDOUT)
+                   stderr=subprocess.STDOUT, check=True)
     if kedr:
         subprocess.run(KEDR_STOP.format(mod).split(), stdout=subprocess.DEVNULL,
-                       stderr=subprocess.STDOUT)
+                       stderr=subprocess.STDOUT, check=True)
 
 
 def remove_mod(mod: str, dmesg: bool = True, kedr: bool = True):
@@ -309,7 +307,7 @@ def compare_values(observed: int, expected: int, desc: str,
 
     return False
 
-def run_and_prompt(f: Callable):
+def run_and_prompt(f: callable):
     """Runs f and then prompts for rerun/shell/continue."""
     while True:
         f()
@@ -328,16 +326,15 @@ def run_and_prompt(f: Callable):
 
         if usr_input == 'a':
             continue
-        elif usr_input == 's':
+        if usr_input == 's':
             p.print_red("^D/exit to end shell session")
             os.system("bash")
             continue
-        else:
-            break
+        break
 
-def run_and_prompt_multi(test_name_to_callable: Dict[str, Callable],
-                         banner_fn: Optional[Callable] = None,
-                         finish_msg: Optional[str] = None):
+def run_and_prompt_multi(test_name_to_callable: dict[str, callable],
+                         banner_fn: callable | None = None,
+                         finish_msg: str | None = None):
     """Wraps run_and_prompt by offering multiple tests to run.
 
     Args:

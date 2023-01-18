@@ -1,21 +1,23 @@
 """
 grades.py: Logic for storing points/comments while grading
 """
+
+from __future__ import annotations
+
 import os
 import sys
 import json
-from typing import Set, Dict, Union, Optional, Tuple
 
-import common.utils as utils
+from common import utils
 
 DEFAULT_LATE_PENALTY = .2
 
 # Probably better to just look at a grades.json
-GradesDictType = Dict[str, # Submitter
-                      Dict[str, Union[bool, # is_late
-                                      Dict[str, # subitem_code
-                                           Dict[str, # award/comments
-                                                Union[bool, str]]]]]]
+GradesDictType = dict[str, # Submitter
+                      dict[str,[bool | # is_late
+                                      dict[str, # subitem_code
+                                           dict[str, # award/comments
+                                                bool | str]]]]]
 
 class Grades():
     """Represents the grades for the current hw
@@ -37,7 +39,7 @@ class Grades():
             self.add_submission_entry()
         self.synchronize()
 
-    def _get_defined_rubric_subitems(self) -> Set[str]:
+    def _get_defined_rubric_subitems(self) -> set[str]:
         subitems = set()
         for table_code in sorted(self.rubric.keys()):
             if table_code == "late_penalty":
@@ -57,9 +59,9 @@ class Grades():
         """Returns a dictionary representation of the TA's grades thus far"""
         if not utils.file_exists(self.grades_file):
             # The TA hasn't started grading this hw yet
-            return dict()
+            return {}
 
-        with open(self.grades_file, "r") as f:
+        with open(self.grades_file, "r", encoding="ascii") as f:
             grades = json.load(f)
 
         # Let's traverse over the rubric and make sure to adjust the dict if
@@ -82,9 +84,9 @@ class Grades():
 
     def add_submission_entry(self):
         """Create a new entry for student/team with null fields"""
-        self._grades[self.submitter] = dict()
+        self._grades[self.submitter] = {}
         self._grades[self.submitter]["is_late"] = False
-        rubric_scores = dict()
+        rubric_scores = {}
         for table_code in sorted(self.rubric.keys()):
             if table_code == "late_penalty":
                 continue
@@ -96,7 +98,7 @@ class Grades():
                     rubric_scores[code] = {"award": None, "comments": None}
         self._grades[self.submitter]["scores"] = rubric_scores
 
-    def __getitem__(self, rubric_subitem) -> Dict[str, Union[bool, str]]:
+    def __getitem__(self, rubric_subitem) -> dict[str, bool | str]:
         """Wrapper around self._grades for convenience"""
         return self._grades[self.submitter]["scores"][rubric_subitem]
 
@@ -107,7 +109,7 @@ class Grades():
             json.dump(self._grades, f, indent=4, sort_keys=True)
             os.fsync(f.fileno())
 
-    def is_graded(self, code: str, name: Optional[str] = None) -> bool:
+    def is_graded(self, code: str, name: str | None = None) -> bool:
         """Checks if a subitem has been graded yet"""
         if not name:
             name = self.submitter
@@ -115,7 +117,7 @@ class Grades():
         return (self._grades[name]["scores"][code]["award"]
                 is not None)
 
-    def is_late(self, name: Optional[str] = None) -> bool:
+    def is_late(self, name: str | None = None) -> bool:
         """Getter for is_late"""
         if not name:
             name = self.submitter
@@ -150,16 +152,16 @@ class Grades():
         if submitter:
             is_graded, _, _ = self.get_submission_grades(submitter, rubric_code)
             return is_graded
-        else:
-            for name in sorted(self._grades, key=str.casefold):
-                is_graded, _, _ = self.get_submission_grades(name, rubric_code)
-                if not is_graded:
-                    return False
-            return True
+
+        for name in sorted(self._grades, key=str.casefold):
+            is_graded, _, _ = self.get_submission_grades(name, rubric_code)
+            if not is_graded:
+                return False
+        return True
 
     def get_submission_grades(
-            self, name: Optional[str] = None,
-            rubric_code: Optional[str] = None) -> Tuple[bool, float, str]:
+            self, name: str | None = None,
+            rubric_code: str | None = None) -> tuple[bool, float, str]:
         """Returns (uni, pts, comments) in tsv format
 
         Returns:
