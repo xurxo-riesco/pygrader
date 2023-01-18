@@ -1,4 +1,4 @@
-[![pylint](https://github.com/hmontero1205/pygrader/workflows/pylint/badge.svg)](https://github.com/hmontero1205/pygrader/actions?query=workflow%3Apylint)
+[![pylint](https://github.com/xurxo-riesco/pygrader/workflows/pylint/badge.svg)](https://github.com/xurxo-riesco/pygrader/actions?query=workflow%3Apylint)
 
 # [pygrader](https://github.com/hmontero1205/pygrader)
 Generic grading framework for coding assignments, originally written for
