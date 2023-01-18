@@ -110,6 +110,7 @@ disable=
     import-error,
     no-self-use,
     no-name-in-module,
+    subprocess-run-check,
 
 
 [REPORTS]

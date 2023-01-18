@@ -43,7 +43,7 @@ def check_late(deadline_path, iso_timestamp):
 
 def checkout_to_team_branch(
         repo: git.Repo, team_repo_id: str,
-        team: str, branch_name: str = "master") -> bool:
+        team: str, branch_name: str = "main") -> bool:
     repo.git.checkout(branch_name)  # Make sure we're on the branch (skel).
     try:
         repo.git.remote("rm", team)
@@ -59,7 +59,7 @@ def checkout_to_team_branch(
 
     repo.git.fetch(team, "--tags")
     try:
-        repo.git.fetch(team, "master")
+        repo.git.fetch(team, "main")
     except git.GitError:
         repo.git.fetch(team, "main")
 
@@ -71,7 +71,7 @@ def checkout_to_team_branch(
         # This branch doesn't exist.
         pass
 
-    if branch_name == "master":
+    if branch_name == "main":
         try:
             repo.git.checkout("-b", team_branch, f"{team}/{branch_name}")
         except git.GitError:
@@ -81,7 +81,7 @@ def checkout_to_team_branch(
 
     return True
 
-def tag() -> Callable:
+def tag(tag_name: str) -> Callable: # pylint: disable=unused-argument
     """Decorator function that checks out to tag_name before the test.
 
     If tag_name is 'master', we checkout to the submission's master branch,
@@ -98,11 +98,11 @@ def tag() -> Callable:
                 # Clean first
                 hw_instance.repo.git.checkout("--", "*")
                 try:
-                    if tag_name == "master":
+                    if tag_name == "main":
                         tag_name = f"{hw_instance.submitter}"
                         hw_instance.repo.git.checkout(tag_name)
                         printing.print_green(
-                                f"[ Checked out to {tag_name}/master ]\n")
+                                f"[ Checked out to {tag_name}/main ]\n")
                     else:
                         hw_instance.repo.git.checkout(tag_name)
                         printing.print_green(f"[ Checked out to {tag_name} ]\n")

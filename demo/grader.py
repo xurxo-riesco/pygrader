@@ -69,7 +69,7 @@ class GRADER(HW):
         """Post demo cleanup"""
         # Remove any local changes the grader may have made 
         self.repo.git.checkout("--", "*")
-        self.repo.git.checkout("master")
+        self.repo.git.checkout("main")
         self.repo.git.clean("-f", "-d")
 
     @directory("root")
