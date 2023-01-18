@@ -225,7 +225,8 @@ class Grades():
                         pretty_code_name = (item_code
                                             if len(rubric_item.subitems) == 1
                                             else code)
-                        item_comments += f"({pretty_code_name})"
+                        pretty_pts = (pts if pts > 0 else abs(pts))
+                        item_comments += f"({pretty_code_name}: -{pretty_pts})"
 
                     if ta_comments:
                         item_comments += f" {ta_comments}"
