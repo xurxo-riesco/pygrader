@@ -189,7 +189,7 @@ def inspect_file(fname: str, pattern: str | None = None,
     subprocess.run(cmd, shell=True, check=True)
 
 def inspect_directory(files: list[str], pattern: str | None = None,
-                      banner_fn: callable | None = None):
+                      banner_fn: callable = None):
     """Prompt the user for which file to inspect with optional pattern.
 
     Args:
